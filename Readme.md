@@ -60,7 +60,7 @@ docker-compose down
 ## Testing
 Use the interactive API documentation at http://localhost:8000/docs to test endpoints.
 
-Postman collection available in `postman/` folder.
+Postman collection available in `postman/` folder..
 
 ## Architecture
 - **FastAPI** - Modern Python web framework
