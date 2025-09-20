@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+README.md
+.env
+.pytest_cache/
+*.log
+node_modules/

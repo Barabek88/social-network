@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  migrate:
+    image: ${DOCKER_REGISTRY:-myregistry}/social-network:${IMAGE_TAG:-latest}
+    command: uv run alembic upgrade head
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    networks:
+      - service_networks
+
+  web:
+    image: ${DOCKER_REGISTRY:-myregistry}/social-network:${IMAGE_TAG:-latest}
+    ports:
+      - "${WEB_PORT:-80}:8000"
+    depends_on:
+      - migrate
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    networks:
+      - service_networks
+
+  db:
+    image: postgres:17
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env.prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-social_network}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    networks:
+      - service_networks
+
+volumes:
+  postgres_data:
+
+
+networks:
+  service_networks:
+    name: service_networks
+    driver: bridge

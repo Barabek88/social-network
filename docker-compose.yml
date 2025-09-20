@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Development (with volume)
+    volumes:
+      - .:/app
+      - /app/.venv # Exclude .venv from bind mount
+    env_file:
+      - .env
+    networks:
+      - service_networks
+
+  db:
+    image: postgres:17
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ../.db_data/postgresdata:/var/lib/postgresql/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-social_network}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    networks:
+      - service_networks
+
+networks:
+  service_networks:
+    name: service_networks
+    driver: bridge

@@ -1,0 +1,111 @@
+{
+	"info": {
+		"_postman_id": "f865f653-486e-4b99-8ce6-3b17c0c8fb11",
+		"name": "Social_Network_API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19445583"
+	},
+	"item": [
+		{
+			"name": "New USER",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"first_name\" : \"Maks223\",\r\n    \"second_name\" : \"Erm\",\r\n    \"password\" : \"1\",\r\n    \"birthdate\" : \"1988-02-14\",\r\n    \"city\" : \"SP_b0\",\r\n    \"gender\" : \"male\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/user/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get USER",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "XXyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjUwYjUzYzYtOGZkOS00NjFmLWEyZDgtNDQ1ZDMxMGQ1MjQ1IiwiZmlyc3RfbmFtZSI6Ik1ha3MyMjMiLCJzZWNvbmRfbmFtZSI6IkVybSIsImV4cCI6MTc1ODM3OTM4NX0.2YamOO1_JVzUKCCCr78u_uBRju_X8iFB7vCC0JYv0fU-fGGk",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "authorization",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGRmMWQ1YmEtMWNjZi00ZDI2LWIwNDQtMmU0Y2MzMTdiZjIzIiwiZmlyc3RfbmFtZSI6Ik1ha3MyIiwic2Vjb25kX25hbWUiOiJFcm0iLCJleHAiOjE3NTgzNjkzOTl9.TsjZ7yPqRZzBCuRvEo4mrFi5QJXoMyv6bISJHJ5yUp8",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/user/get/650b53c6-8fd9-461f-a2d8-445d310d5245",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"get",
+						"650b53c6-8fd9-461f-a2d8-445d310d5245"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : \"650b53c6-8fd9-461f-a2d8-445d310d5245\",\r\n    \"password\" : \"1\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
