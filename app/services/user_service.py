@@ -21,3 +21,14 @@ class UserService:
             return UserResponse.model_validate(db_user)
 
         return None
+
+    async def search_users(
+        self, first_name: str, second_name: str
+    ) -> list[UserResponse] | None:
+        db_users = await self.repository.search_users_with_raw_sql(
+            first_name, second_name
+        )
+        if db_users:
+            return [UserResponse.model_validate(user) for user in db_users]
+
+        return None

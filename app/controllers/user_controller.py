@@ -45,3 +45,24 @@ async def get_user(
     if not user:
         raise AppError(strings.NOT_FOUND_USER_ERROR_MSG, status.HTTP_404_NOT_FOUND)
     return user
+
+
+@router.get(
+    "/search", response_model=list[UserResponse], status_code=status.HTTP_200_OK
+)
+async def search_users(
+    first_name: str,
+    second_name: str,
+    service: UserService = Depends(get_user_service),
+):
+    if len(first_name) < 2 or len(second_name) < 2:
+        raise AppError(strings.TO_SHORT_SEARCHING_PARAMS, status.HTTP_400_BAD_REQUEST)
+
+    logger.info(f"Searching users: first_name={first_name}, last_name={second_name}")
+
+    users = await service.search_users(first_name, second_name)
+
+    if not users:
+        raise AppError(strings.NOT_FOUND_USER_ERROR_MSG, status.HTTP_404_NOT_FOUND)
+
+    return users

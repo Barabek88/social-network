@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from app.models.user import User
 from app.schemas.user import UserCreate
-from typing import Optional, List
+from typing import List
 from uuid import uuid4, UUID
 
 
@@ -43,7 +43,7 @@ class UserRepository:
     async def get_by_id_with_raw_sql(self, user_id: UUID) -> dict | None:
         query = text(
             """
-            select id, first_name, second_name, birthdate, biography, city from users where id = :user_id
+            select id, first_name, second_name, birthdate::date as birthdate, biography, city from users where id = :user_id
             """
         )
         result = await self.db.execute(query, {"user_id": user_id})
@@ -61,3 +61,23 @@ class UserRepository:
         result = await self.db.execute(query, {"user_id": user_id})
         row = result.mappings().fetchone()
         return dict(row) if row else None
+
+    async def search_users_with_raw_sql(
+        self, first_name: str, second_name: str
+    ) -> List[dict] | None:
+        query = text(
+            """
+            SELECT id, first_name, second_name, birthdate::date as birthdate, biography, city
+            FROM users
+            WHERE first_name ILIKE :first_name || '%' and second_name ILIKE :second_name || '%'
+            order by id
+            limit 100
+            """
+        )
+
+        result = await self.db.execute(
+            query, {"first_name": first_name, "second_name": second_name}
+        )
+
+        rows = result.mappings().fetchall()
+        return [dict(row) for row in rows] if rows else None

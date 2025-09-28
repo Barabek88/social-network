@@ -28,6 +28,7 @@ docker-compose up -d
 - `POST /api/v1/user/register` - User registration
 - `POST /api/v1/auth/login` - User login
 - `GET /api/v1/user/get/{user_id}` - Get user by ID (requires authentication)
+- `Get /api/v1/user/search` - Search user by first_name and second_name
 
 ## Environment Variables
 Required environment variables (see `.env.example`):
