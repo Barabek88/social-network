@@ -45,7 +45,7 @@ DROP TYPE IF EXISTS gender CASCADE;
 ## Dependencies Installation
 Install all required packages:
 ```bash
-uv add sqlalchemy psycopg2-binary passlib[bcrypt] email-validator alembic python-dotenv pydantic-settings asyncpg loguru pyjwt
+uv add sqlalchemy psycopg2-binary passlib[bcrypt] email-validator alembic python-dotenv pydantic-settings asyncpg loguru pyjwt faker
 ```
 
 ## Database Migrations

@@ -62,6 +62,9 @@ Use the interactive API documentation at http://localhost:8000/docs to test endp
 
 Postman collection available in `postman/` folder..
 
+Fill db with test data
+uv run python scripts\fill_test_data.py
+
 ## Architecture
 - **FastAPI** - Modern Python web framework
 - **PostgreSQL** - Primary database

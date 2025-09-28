@@ -8,6 +8,7 @@ dependencies = [
     "alembic>=1.16.5",
     "asyncpg>=0.30.0",
     "email-validator>=2.3.0",
+    "faker>=37.8.0",
     "fastapi>=0.116.1",
     "loguru>=0.7.3",
     "passlib[bcrypt]>=1.7.4",
