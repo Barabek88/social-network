@@ -38,7 +38,12 @@ convention = {
 Base = declarative_base(metadata=MetaData(naming_convention=convention))
 
 engine: AsyncEngine = create_async_engine(
-    make_url_async(settings.DATABASE_URL), poolclass=AsyncAdaptedQueuePool
+    make_url_async(settings.DATABASE_URL),
+    poolclass=AsyncAdaptedQueuePool,
+    pool_size=settings.POSTGRES_POOl_SIZE,
+    max_overflow=settings.POSTGRES_MAX_OVERFLOW,
+    pool_timeout=settings.POSTGRES_POOL_TIMEOUT,
+    pool_recycle=settings.POSTGRES_POOL_RECYCLE,
 )
 
 

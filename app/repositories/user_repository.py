@@ -69,9 +69,8 @@ class UserRepository:
             """
             SELECT id, first_name, second_name, birthdate::date as birthdate, biography, city
             FROM users
-            WHERE first_name ILIKE :first_name || '%' and second_name ILIKE :second_name || '%'
+            WHERE lower(first_name) LIKE lower(:first_name) || '%' and lower(second_name) LIKE lower(:second_name) || '%'
             order by id
-            limit 100
             """
         )
 

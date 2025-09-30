@@ -19,6 +19,11 @@ class AppSettings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
 
+    POSTGRES_POOl_SIZE: int = 20
+    POSTGRES_MAX_OVERFLOW: int = 30
+    POSTGRES_POOL_TIMEOUT: int = 60
+    POSTGRES_POOL_RECYCLE: int = 3600
+
     # JWT
     JWT_SECRET_KEY: str
     JWT_EXPIRATION_TIME: int = 3600
