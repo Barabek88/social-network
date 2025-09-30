@@ -78,6 +78,46 @@
 			"response": []
 		},
 		{
+			"name": "Search User",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/v1/user/search?first_name=на&second_name=ку",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"user",
+						"search"
+					],
+					"query": [
+						{
+							"key": "first_name",
+							"value": "на"
+						},
+						{
+							"key": "second_name",
+							"value": "ку"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "login",
 			"request": {
 				"method": "POST",
