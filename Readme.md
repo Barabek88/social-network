@@ -75,7 +75,7 @@ uv run python scripts\fill_test_data.py
 - **Docker** - Containerization
 - **Loguru** - Structured logging
 
-
+docker-compose up -d db db-slave1 db-slave2
 
 
 

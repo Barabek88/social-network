@@ -1,11 +1,25 @@
-"""Provides dependency for service."""
+"""FastAPI dependencies for database sessions."""
 
-from fastapi import Depends, Request, status
-
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.db_manager import db_manager
+from fastapi import Request, status
 from app.core.exceptions import AppError
 from app.resources import strings
 from app.settings import settings
 from app.core.jwt_token import get_data_from_jwt_token
+
+
+async def get_write_db() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency for write operations (master database)."""
+    async for session in db_manager.get_write_session():
+        yield session
+
+
+async def get_read_db() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency for read operations (replica database)."""
+    async for session in db_manager.get_read_session():
+        yield session
 
 
 async def get_current_user(request: Request) -> dict | None:

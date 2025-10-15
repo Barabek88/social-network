@@ -32,6 +32,24 @@ class AppSettings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    
+    # Read replicas configuration
+    POSTGRES_READ_HOSTS: str = "localhost:5433,localhost:5434"
+    
+    @property
+    def get_read_replica_urls(self) -> list[str]:
+        """Parse read replica URLs from environment variable."""
+        urls = []
+        for host_port in self.POSTGRES_READ_HOSTS.split(","):
+            host_port = host_port.strip()
+            if ":" in host_port:
+                host, port = host_port.split(":")
+            else:
+                host, port = host_port, "5432"
+            
+            url = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{host}:{port}/{self.POSTGRES_DB}"
+            urls.append(url)
+        return urls
 
     WEB_PORT: int = 8000
 

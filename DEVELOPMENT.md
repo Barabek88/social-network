@@ -130,3 +130,9 @@ Check specific environment variable:
 ```powershell
 $env:POSTGRES_HOST
 ```
+
+uv run uvicorn main:app --reload
+
+cmd /c setup-replication.bat
+
+uv run pytest tests/test_bulk_insert.py -v

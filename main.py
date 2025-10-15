@@ -1,7 +1,9 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.controllers import user_router, auth_router
 from app.core.exceptions import AppError
 from fastapi.exceptions import RequestValidationError
+from app.core.db_manager import db_manager
 
 from app.core.exception_handlers import (
     app_exception_handler,
@@ -9,7 +11,17 @@ from app.core.exception_handlers import (
     validation_exception_handler,
 )
 
-app = FastAPI(title="Social Network API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await db_manager.start_health_check()
+    yield
+    # Shutdown
+    await db_manager.close_all()
+
+
+app = FastAPI(title="Social Network API", version="1.0.0", lifespan=lifespan)
 
 # Include routers
 app.include_router(user_router, prefix="/api/v1")

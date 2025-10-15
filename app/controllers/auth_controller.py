@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.auth import LoginResponse, UserLogin
-from app.core.database import get_db
+from app.core.dependencies import get_read_db
 from app.services.auth_service import AuthService
 from app.logger import logger
 from app.core.exceptions import AppError
@@ -12,7 +12,7 @@ from app.resources import strings
 router = APIRouter(tags=["Auth"])
 
 
-async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
+async def get_auth_service(db: AsyncSession = Depends(get_read_db)) -> AuthService:
     return AuthService(db)
 
 

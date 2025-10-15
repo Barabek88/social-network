@@ -1,0 +1,3 @@
+inserted rows = 14
+======================================================================================= short test summary info ======================================================================================= 
+FAILED tests/test_bulk_insert.py::test_bulk_insert_1000_records - sqlalchemy.exc.InterfaceError: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.exceptions._base.InterfaceError'>: connection is closed

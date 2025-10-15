@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
+from app.core.dependencies import get_write_db, get_read_db
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserRegisterResponse, UserResponse
 from app.logger import logger
@@ -12,7 +12,13 @@ from app.core.dependencies import get_current_user
 router = APIRouter(prefix="/user", tags=["User"])
 
 
-async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
+async def get_write_user_service(
+    db: AsyncSession = Depends(get_write_db),
+) -> UserService:
+    return UserService(db)
+
+
+async def get_read_user_service(db: AsyncSession = Depends(get_read_db)) -> UserService:
     return UserService(db)
 
 
@@ -20,7 +26,7 @@ async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     "/register", response_model=UserRegisterResponse, status_code=status.HTTP_200_OK
 )
 async def create_user(
-    user_data: UserCreate, service: UserService = Depends(get_user_service)
+    user_data: UserCreate, service: UserService = Depends(get_write_user_service)
 ):
 
     logger.info(f"user_data: {user_data.model_dump(exclude={'password'})}")
@@ -33,7 +39,7 @@ async def create_user(
 )
 async def get_user(
     user_id: UUID,
-    service: UserService = Depends(get_user_service),
+    service: UserService = Depends(get_read_user_service),
     # current_user: dict = Depends(get_current_user),
 ):
     logger.info(f"user_id: {user_id}")
@@ -53,7 +59,7 @@ async def get_user(
 async def search_users(
     first_name: str,
     second_name: str,
-    service: UserService = Depends(get_user_service),
+    service: UserService = Depends(get_read_user_service),
 ):
     if len(first_name) < 2 or len(second_name) < 2:
         raise AppError(strings.TO_SHORT_SEARCHING_PARAMS, status.HTTP_400_BAD_REQUEST)

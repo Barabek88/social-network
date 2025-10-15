@@ -19,12 +19,16 @@ services:
 
   db:
     image: postgres:17
+    container_name: postgres-master
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - ../.db_data/postgresdata:/var/lib/postgresql/data
+      - ./master-db-config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./master-db-config/pg_hba.conf:/etc/postgresql/pg_hba.conf
     env_file:
       - .env
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-social_network}"]
       interval: 5s
@@ -35,6 +39,34 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
+    networks:
+      - service_networks
+
+  db-slave1:
+    image: postgres:17
+    container_name: postgres_slave1
+    ports:
+      - "5433:5432"
+    volumes:
+      - ../.db_data/slave1data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - service_networks
+
+  db-slave2:
+    image: postgres:17
+    container_name: postgres_slave2
+    ports:
+      - "5434:5432"
+    volumes:
+      - ../.db_data/slave2data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    depends_on:
+      - db
     networks:
       - service_networks
 
