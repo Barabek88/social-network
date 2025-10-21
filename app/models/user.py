@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime, Boolean, text as sa_text
+from sqlalchemy import String, DateTime, Boolean, text as sa_text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Optional
 from app.core.database import Base
 from uuid import uuid4, UUID as PyUUID
-from enum import Enum as PyEnum
 from sqlalchemy import Enum
 from app.models.enums import Gender
 
@@ -30,4 +29,13 @@ class User(Base):
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        Index(
+            'idx_users_search_lower',
+            func.lower(first_name),
+            func.lower(second_name),
+            postgresql_ops={'lower(first_name::text)': 'varchar_pattern_ops', 'lower(second_name::text)': 'varchar_pattern_ops'}
+        ),
     )
