@@ -80,3 +80,72 @@ class UserRepository:
 
         rows = result.mappings().fetchall()
         return [dict(row) for row in rows] if rows else None
+
+    async def get_friendship_raw_sql(
+        self, current_user_id: UUID, friend_id: UUID
+    ) -> dict | None:
+        query = text(
+            """
+            SELECT user_id, friend_id, created_at
+            FROM friends WHERE user_id = :user_id and friend_id = :friend_id and is_active = true
+            """
+        )
+        result = await self.db.execute(
+            query, {"user_id": current_user_id, "friend_id": friend_id}
+        )
+        row = result.mappings().fetchone()
+        return dict(row) if row else None
+
+    async def add_friend(self, current_user_id: UUID, friend_id: UUID):
+        query = text(
+            """
+            INSERT INTO friends (user_id, friend_id, is_active, created_at)
+            VALUES (:user_id, :friend_id, true, NOW())
+            ON CONFLICT (user_id, friend_id) 
+            DO UPDATE SET is_active = true, updated_at = NOW()
+            """
+        )
+
+        await self.db.execute(
+            query,
+            {
+                "user_id": current_user_id,
+                "friend_id": friend_id,
+            },
+        )
+
+        await self.db.commit()
+
+    async def delete_friend(self, current_user_id: UUID, friend_id: UUID):
+        query = text(
+            """
+            UPDATE friends 
+            SET is_active = false, updated_at = NOW()
+            WHERE user_id = :user_id AND friend_id = :friend_id
+            """
+        )
+
+        await self.db.execute(
+            query,
+            {
+                "user_id": current_user_id,
+                "friend_id": friend_id,
+            },
+        )
+
+        await self.db.commit()
+
+    async def get_friends_list(self, user_id: UUID) -> List[dict] | None:
+        query = text(
+            """
+            SELECT u.id, u.first_name, u.second_name, u.birthdate::date as birthdate, u.biography, u.city
+            FROM friends f
+            JOIN users u ON f.friend_id = u.id
+            WHERE f.user_id = :user_id AND f.is_active = true
+            ORDER BY u.first_name, u.second_name
+            """
+        )
+        
+        result = await self.db.execute(query, {"user_id": user_id})
+        rows = result.mappings().fetchall()
+        return [dict(row) for row in rows] if rows else None

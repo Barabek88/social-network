@@ -9,3 +9,7 @@ PASS_OR_LOGIN_ERROR_MSG = "Пользователь не найден"
 NOT_FOUND_USER_ERROR_MSG = "Анкета не найдена"
 TO_SHORT_SEARCHING_PARAMS = "Параметры поиска должны быть длиной не менее 2 символов."
 TOKEN_MISSING = "Отсутствует или неправильный authorization header"
+
+FRIEND_ADDED_MSG = "Пользователь успешно указал своего друга"
+FRIEND_AND_USER_THE_SAME_ERROR_MSG = "Невозможно добавить себя в друзья"
+ALREADY_FRIEND_ERROR_MSG = "Пользователь уже является другом"

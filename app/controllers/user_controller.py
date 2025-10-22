@@ -80,9 +80,11 @@ async def add_friend(
     service: UserService = Depends(get_write_user_service),
     current_user: dict = Depends(get_current_user),
 ):
-    logger.info(f"Adding friend: user_id={user_id}, current_user={current_user['user_id']}")
+    logger.info(
+        f"Adding friend: user_id={user_id}, current_user={current_user['user_id']}"
+    )
     await service.add_friend(current_user["user_id"], user_id)
-    return {"message": "Пользователь успешно указал своего друга"}
+    return {"description": strings.FRIEND_ADDED_MSG}
 
 
 @router.put("/friend/delete/{user_id}", status_code=status.HTTP_200_OK)
@@ -91,6 +93,21 @@ async def delete_friend(
     service: UserService = Depends(get_write_user_service),
     current_user: dict = Depends(get_current_user),
 ):
-    logger.info(f"Deleting friend: user_id={user_id}, current_user={current_user['user_id']}")
+    logger.info(
+        f"Deleting friend: user_id={user_id}, current_user={current_user['user_id']}"
+    )
     await service.delete_friend(current_user["user_id"], user_id)
     return {"message": "Пользователь успешно удалил из друзей пользователя"}
+
+
+@router.get(
+    "/friends", response_model=list[UserResponse], status_code=status.HTTP_200_OK
+)
+async def get_friends_list(
+    service: UserService = Depends(get_read_user_service),
+    current_user: dict = Depends(get_current_user),
+):
+    friends = await service.get_friends_list(current_user["user_id"])
+    if not friends:
+        return []
+    return friends
