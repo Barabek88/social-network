@@ -13,3 +13,7 @@ TOKEN_MISSING = "Отсутствует или неправильный authoriz
 FRIEND_ADDED_MSG = "Пользователь успешно указал своего друга"
 FRIEND_AND_USER_THE_SAME_ERROR_MSG = "Невозможно добавить себя в друзья"
 ALREADY_FRIEND_ERROR_MSG = "Пользователь уже является другом"
+NOT_FOUND_FRIEND_ERROR_MSG = "Друг не найден"
+
+NOT_FOUND_POST_ERROR_MSG = "Пост не найден"
+NOT_OWNER_POST_ERROR_MSG = "Пользователь не является владельцем поста"

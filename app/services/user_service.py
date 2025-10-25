@@ -1,12 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate, UserRegisterResponse, UserResponse
-from typing import Optional
 from app.core.security import hash_password
 from uuid import UUID
 from app.core.exceptions import AppError
 from app.resources import strings
 from fastapi import status
+from app.schemas.post import PostCreate, PostResponse, PostUpdate
 
 
 class UserService:
@@ -57,7 +57,9 @@ class UserService:
             current_user_id, friend_id
         )
         if not existing_friendship:
-            raise AppError("Friendship not found", status.HTTP_404_NOT_FOUND)
+            raise AppError(
+                strings.NOT_FOUND_FRIEND_ERROR_MSG, status.HTTP_404_NOT_FOUND
+            )
 
         # Delete friend
         await self.repository.delete_friend(current_user_id, friend_id)
@@ -66,4 +68,50 @@ class UserService:
         db_friends = await self.repository.get_friends_list(user_id)
         if db_friends:
             return [UserResponse.model_validate(friend) for friend in db_friends]
+        return None
+
+    async def create_post(self, post_data: PostCreate, user_id: UUID) -> UUID | None:
+        user = await self.repository.get_by_id_with_raw_sql(user_id)
+        if not user:
+            raise AppError(strings.NOT_FOUND_USER_ERROR_MSG, status.HTTP_404_NOT_FOUND)
+
+        return await self.repository.create_post(post_data, user_id)
+
+    async def update_post(self, post_data: PostUpdate, user_id: UUID):
+        post = await self.repository.get_post_by_id(post_data.id)
+
+        if not post:
+            raise AppError(strings.NOT_FOUND_POST_ERROR_MSG, status.HTTP_404_NOT_FOUND)
+
+        if str(post["author_user_id"]) != user_id:
+            raise AppError(strings.NOT_OWNER_POST_ERROR_MSG, status.HTTP_403_FORBIDDEN)
+
+        await self.repository.update_post(post_data)
+
+    async def delete_post(self, post_id: UUID, user_id: UUID):
+        post = await self.repository.get_post_by_id(post_id)
+
+        if not post:
+            raise AppError(strings.NOT_FOUND_POST_ERROR_MSG, status.HTTP_404_NOT_FOUND)
+
+        if str(post["author_user_id"]) != user_id:
+            raise AppError(strings.NOT_OWNER_POST_ERROR_MSG, status.HTTP_403_FORBIDDEN)
+
+        await self.repository.delete_post(post_id)
+
+    async def get_post(self, post_id: UUID) -> PostResponse | None:
+        post = await self.repository.get_post_by_id(post_id)
+
+        if post:
+            return PostResponse.model_validate(post)
+
+        return None
+
+    async def get_posts_feed(
+        self, user_id: UUID, offset: int, limit: int
+    ) -> list[PostResponse] | None:
+        db_posts = await self.repository.get_posts_feed(user_id, offset, limit)
+        if db_posts:
+            return [PostResponse.model_validate(post) for post in db_posts]
+
         return None

@@ -4,6 +4,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate
 from typing import List
 from uuid import uuid4, UUID
+from app.schemas.post import PostCreate, PostUpdate
 
 
 class UserRepository:
@@ -145,7 +146,100 @@ class UserRepository:
             ORDER BY u.first_name, u.second_name
             """
         )
-        
+
         result = await self.db.execute(query, {"user_id": user_id})
+        rows = result.mappings().fetchall()
+        return [dict(row) for row in rows] if rows else None
+
+    async def create_post(self, posts: PostCreate, user_id: UUID) -> UUID | None:
+        post_id = uuid4()
+
+        query = text(
+            """
+            INSERT INTO posts (id, text, author_user_id)
+            VALUES (:post_id, :text, :user_id)
+            RETURNING id
+            """
+        )
+
+        result = await self.db.execute(
+            query,
+            {
+                "text": posts.text,
+                "user_id": user_id,
+                "post_id": post_id,
+            },
+        )
+
+        await self.db.commit()
+        return result.scalar_one()
+
+    async def get_post_by_id(self, post_id: UUID) -> dict | None:
+        query = text(
+            """
+            SELECT id, text, author_user_id
+            FROM posts WHERE id = :post_id and is_active = true
+            """
+        )
+        result = await self.db.execute(query, {"post_id": post_id})
+        row = result.mappings().fetchone()
+        return dict(row) if row else None
+
+    async def update_post(self, post_data: PostUpdate):
+        query = text(
+            """
+            UPDATE posts 
+            SET text = :text, updated_at = NOW()
+            WHERE id = :post_id
+            """
+        )
+
+        await self.db.execute(
+            query,
+            {
+                "post_id": post_data.id,
+                "text": post_data.text,
+            },
+        )
+
+        await self.db.commit()
+
+    async def delete_post(self, post_id: UUID):
+        query = text(
+            """
+            UPDATE posts 
+            SET is_active = false, updated_at = NOW()
+            WHERE id = :post_id
+            """
+        )
+
+        await self.db.execute(
+            query,
+            {
+                "post_id": post_id,
+            },
+        )
+
+        await self.db.commit()
+
+    async def get_posts_feed(
+        self, user_id: UUID, offset: int, limit: int
+    ) -> List[dict] | None:
+        query = text(
+            """
+            SELECT p.id, p.text, p.author_user_id
+            FROM friends f
+            JOIN posts p ON f.friend_id = p.author_user_id AND p.is_active = true
+            WHERE f.user_id = :user_id AND f.is_active = true
+            ORDER BY p.updated_at DESC
+            OFFSET :offset
+            LIMIT :limit
+            """
+        )
+
+        result = await self.db.execute(
+            query, {"user_id": user_id, "offset": offset, "limit": limit}
+        )
+
         rows = result.mappings().fetchall()
         return [dict(row) for row in rows] if rows else None
