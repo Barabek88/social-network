@@ -190,3 +190,15 @@ async def posts(
         return []
 
     return posts
+
+
+@router.post("/post/feed/rebuild", status_code=status.HTTP_200_OK)
+async def rebuild_feed_cache(
+    user_id: UUID | None = None,
+    service: UserService = Depends(get_write_user_service),
+    current_user: dict = Depends(get_current_user),
+):
+    target_user_id = user_id if user_id else current_user["user_id"]
+    logger.info(f"Rebuilding cache for user {target_user_id}")
+    await service.rebuild_feed_cache(target_user_id)
+    return {"message": f"Cache rebuilt successfully for user {target_user_id}"}

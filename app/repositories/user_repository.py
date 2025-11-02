@@ -101,7 +101,9 @@ class UserRepository:
         query = text(
             """
             INSERT INTO friends (user_id, friend_id, is_active, created_at)
-            VALUES (:user_id, :friend_id, true, NOW())
+            VALUES 
+                (:user_id, :friend_id, true, NOW()),
+                (:friend_id, :user_id, true, NOW())
             ON CONFLICT (user_id, friend_id) 
             DO UPDATE SET is_active = true, updated_at = NOW()
             """
@@ -122,7 +124,8 @@ class UserRepository:
             """
             UPDATE friends 
             SET is_active = false, updated_at = NOW()
-            WHERE user_id = :user_id AND friend_id = :friend_id
+            WHERE (user_id = :user_id AND friend_id = :friend_id)
+               OR (user_id = :friend_id AND friend_id = :user_id)
             """
         )
 
@@ -231,7 +234,7 @@ class UserRepository:
             FROM friends f
             JOIN posts p ON f.friend_id = p.author_user_id AND p.is_active = true
             WHERE f.user_id = :user_id AND f.is_active = true
-            ORDER BY p.updated_at DESC
+            ORDER BY p.updated_at, p.created_at DESC
             OFFSET :offset
             LIMIT :limit
             """
@@ -243,3 +246,15 @@ class UserRepository:
 
         rows = result.mappings().fetchall()
         return [dict(row) for row in rows] if rows else None
+
+    async def get_friend_ids(self, user_id: UUID) -> List[UUID] | None:
+        query = text(
+            """
+            SELECT friend_id
+            FROM friends
+            WHERE user_id = :user_id AND is_active = true
+            """
+        )
+        result = await self.db.execute(query, {"user_id": user_id})
+        rows = result.fetchall()
+        return [row[0] for row in rows] if rows else None

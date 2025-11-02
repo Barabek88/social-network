@@ -4,6 +4,7 @@ from app.controllers import user_router, auth_router
 from app.core.exceptions import AppError
 from fastapi.exceptions import RequestValidationError
 from app.core.db_manager import db_manager
+from app.core.redis_client import redis_client
 
 from app.core.exception_handlers import (
     app_exception_handler,
@@ -16,9 +17,11 @@ from app.core.exception_handlers import (
 async def lifespan(app: FastAPI):
     # Startup
     await db_manager.start_health_check()
+    await redis_client.connect()
     yield
     # Shutdown
     await db_manager.close_all()
+    await redis_client.close()
 
 
 app = FastAPI(title="Social Network API", version="1.0.0", lifespan=lifespan)

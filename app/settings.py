@@ -51,6 +51,14 @@ class AppSettings(BaseSettings):
             urls.append(url)
         return urls
 
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: str | None = None
+    FEED_CACHE_SIZE: int = 1000
+    FEED_CACHE_TTL: int = 3600
+
     WEB_PORT: int = 8000
 
 

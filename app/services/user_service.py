@@ -7,11 +7,21 @@ from app.core.exceptions import AppError
 from app.resources import strings
 from fastapi import status
 from app.schemas.post import PostCreate, PostResponse, PostUpdate
+from app.services.cache_service import CacheService
+from app.settings import settings
+from app.logger import logger
 
 
 class UserService:
     def __init__(self, db: AsyncSession):
         self.repository = UserRepository(db)
+        self.cache = CacheService()
+
+    async def _invalidate_friends_cache(self, user_id: UUID):
+        """Invalidate cache for all friends of the user"""
+        friends = await self.repository.get_friend_ids(user_id)
+        if friends:
+            await self.cache.invalidate_feeds_for_friends(friends)
 
     async def create_user(self, user_data: UserCreate) -> UserRegisterResponse:
         hashed_password = hash_password(user_data.password)
@@ -51,6 +61,9 @@ class UserService:
         # Add friend (upsert handles existing friendships)
         await self.repository.add_friend(current_user_id, friend_id)
 
+        # Invalidate both users' feeds (mutual friendship)
+        await self.cache.invalidate_feeds_for_friends([current_user_id, friend_id])
+
     async def delete_friend(self, current_user_id: UUID, friend_id: UUID):
         # Check if friendship exists
         existing_friendship = await self.repository.get_friendship_raw_sql(
@@ -64,6 +77,9 @@ class UserService:
         # Delete friend
         await self.repository.delete_friend(current_user_id, friend_id)
 
+        # Invalidate both users' feeds (mutual friendship)
+        await self.cache.invalidate_feeds_for_friends([current_user_id, friend_id])
+
     async def get_friends_list(self, user_id: UUID) -> list[UserResponse] | None:
         db_friends = await self.repository.get_friends_list(user_id)
         if db_friends:
@@ -75,7 +91,9 @@ class UserService:
         if not user:
             raise AppError(strings.NOT_FOUND_USER_ERROR_MSG, status.HTTP_404_NOT_FOUND)
 
-        return await self.repository.create_post(post_data, user_id)
+        post_id = await self.repository.create_post(post_data, user_id)
+        await self._invalidate_friends_cache(user_id)
+        return post_id
 
     async def update_post(self, post_data: PostUpdate, user_id: UUID):
         post = await self.repository.get_post_by_id(post_data.id)
@@ -87,6 +105,7 @@ class UserService:
             raise AppError(strings.NOT_OWNER_POST_ERROR_MSG, status.HTTP_403_FORBIDDEN)
 
         await self.repository.update_post(post_data)
+        await self._invalidate_friends_cache(user_id)
 
     async def delete_post(self, post_id: UUID, user_id: UUID):
         post = await self.repository.get_post_by_id(post_id)
@@ -98,6 +117,7 @@ class UserService:
             raise AppError(strings.NOT_OWNER_POST_ERROR_MSG, status.HTTP_403_FORBIDDEN)
 
         await self.repository.delete_post(post_id)
+        await self._invalidate_friends_cache(user_id)
 
     async def get_post(self, post_id: UUID) -> PostResponse | None:
         post = await self.repository.get_post_by_id(post_id)
@@ -110,8 +130,41 @@ class UserService:
     async def get_posts_feed(
         self, user_id: UUID, offset: int, limit: int
     ) -> list[PostResponse] | None:
-        db_posts = await self.repository.get_posts_feed(user_id, offset, limit)
-        if db_posts:
-            return [PostResponse.model_validate(post) for post in db_posts]
+        cached_posts = await self.cache.get_feed_from_cache(user_id, offset, limit)
 
-        return None
+        if cached_posts is not None:
+            logger.info(f"Feed from cache for user {user_id}")
+            return [PostResponse.model_validate(post) for post in cached_posts]
+
+        logger.info(f"Feed from DB for user {user_id}")
+
+        # Cache miss on first page
+        if offset == 0:
+            # Load enough data to satisfy request and populate cache
+            load_limit = max(limit, settings.FEED_CACHE_SIZE)
+            db_posts = await self.repository.get_posts_feed(user_id, 0, load_limit)
+
+            if db_posts:
+                # Cache first 1000 posts
+                await self.cache.set_feed_to_cache(
+                    user_id, db_posts[: settings.FEED_CACHE_SIZE]
+                )
+                # Return requested amount
+                return [PostResponse.model_validate(post) for post in db_posts[:limit]]
+            return []
+
+        # Cache miss on other pages - query DB directly
+        db_posts = await self.repository.get_posts_feed(user_id, offset, limit)
+        return (
+            [PostResponse.model_validate(post) for post in db_posts] if db_posts else []
+        )
+
+    async def rebuild_feed_cache(self, user_id: UUID):
+        await self.cache.invalidate_feed(user_id)
+        db_posts = await self.repository.get_posts_feed(
+            user_id, 0, settings.FEED_CACHE_SIZE
+        )
+        if db_posts:
+            await self.cache.set_feed_to_cache(user_id, db_posts)
+        logger.info(f"Cache rebuilt for user {user_id}")
+        return True

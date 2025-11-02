@@ -136,3 +136,6 @@ uv run uvicorn main:app --reload
 cmd /c setup-replication.bat
 
 uv run pytest tests/test_bulk_insert.py -v
+
+#redis commander
+http://localhost:8081
