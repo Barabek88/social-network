@@ -21,7 +21,7 @@ class UserService:
         """Invalidate cache for all friends of the user"""
         friends = await self.repository.get_friend_ids(user_id)
         if friends:
-            await self.cache.invalidate_feeds_for_friends(friends)
+            await self.cache.invalidate_feeds(friends)
 
     async def create_user(self, user_data: UserCreate) -> UserRegisterResponse:
         hashed_password = hash_password(user_data.password)
@@ -62,7 +62,7 @@ class UserService:
         await self.repository.add_friend(current_user_id, friend_id)
 
         # Invalidate both users' feeds (mutual friendship)
-        await self.cache.invalidate_feeds_for_friends([current_user_id, friend_id])
+        await self.cache.invalidate_feeds([current_user_id, friend_id])
 
     async def delete_friend(self, current_user_id: UUID, friend_id: UUID):
         # Check if friendship exists
@@ -78,7 +78,7 @@ class UserService:
         await self.repository.delete_friend(current_user_id, friend_id)
 
         # Invalidate both users' feeds (mutual friendship)
-        await self.cache.invalidate_feeds_for_friends([current_user_id, friend_id])
+        await self.cache.invalidate_feeds([current_user_id, friend_id])
 
     async def get_friends_list(self, user_id: UUID) -> list[UserResponse] | None:
         db_friends = await self.repository.get_friends_list(user_id)
@@ -160,7 +160,7 @@ class UserService:
         )
 
     async def rebuild_feed_cache(self, user_id: UUID):
-        await self.cache.invalidate_feed(user_id)
+        await self.cache.invalidate_feeds([user_id])
         db_posts = await self.repository.get_posts_feed(
             user_id, 0, settings.FEED_CACHE_SIZE
         )

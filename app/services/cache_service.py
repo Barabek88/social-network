@@ -60,25 +60,14 @@ class CacheService:
             logger.error(f"Cache write error: {e}")
             return False
 
-    async def invalidate_feed(self, user_id: UUID) -> bool:
-        try:
-            client = redis_client.get_client()
-            key = self._get_feed_key(user_id)
-            await client.delete(key)
-            logger.info(f"Cache invalidated for user {user_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Cache invalidation error: {e}")
-            return False
-
-    async def invalidate_feeds_for_friends(self, user_ids: list[UUID]) -> bool:
+    async def invalidate_feeds(self, user_ids: list[UUID]) -> bool:
         try:
             client = redis_client.get_client()
             keys = [self._get_feed_key(uid) for uid in user_ids]
             if keys:
                 await client.delete(*keys)
-                logger.info(f"Cache invalidated for {len(keys)} users")
+                logger.info(f"Cache invalidated for {len(keys)} user(s)")
             return True
         except Exception as e:
-            logger.error(f"Bulk cache invalidation error: {e}")
+            logger.error(f"Cache invalidation error: {e}")
             return False
