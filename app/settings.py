@@ -59,6 +59,12 @@ class AppSettings(BaseSettings):
     FEED_CACHE_SIZE: int = 1000
     FEED_CACHE_TTL: int = 3600
 
+    # RabbitMQ
+    RABBITMQ_HOST: str = "localhost"
+    RABBITMQ_PORT: int = 5672
+    RABBITMQ_USER: str = "guest"
+    RABBITMQ_PASSWORD: str = "guest"
+
     WEB_PORT: int = 8000
 
 

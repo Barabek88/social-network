@@ -87,12 +87,26 @@ class UserService:
         return None
 
     async def create_post(self, post_data: PostCreate, user_id: UUID) -> UUID | None:
+        from app.core.rabbitmq_client import rabbitmq_client
+        
         user = await self.repository.get_by_id_with_raw_sql(user_id)
         if not user:
             raise AppError(strings.NOT_FOUND_USER_ERROR_MSG, status.HTTP_404_NOT_FOUND)
 
         post_id = await self.repository.create_post(post_data, user_id)
         await self._invalidate_friends_cache(user_id)
+        
+        # Publish to RabbitMQ for deferred processing
+        friend_ids = await self.repository.get_friend_ids(user_id)
+        if friend_ids:
+            post_message = {
+                "postId": str(post_id),
+                "postText": post_data.text,
+                "author_user_id": str(user_id)
+            }
+            for friend_id in friend_ids:
+                await rabbitmq_client.publish_post_event(str(friend_id), post_message)
+        
         return post_id
 
     async def update_post(self, post_data: PostUpdate, user_id: UUID):
