@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 import jwt
-from fastapi import status
+from fastapi import status, HTTPException, Request
 
 from app.core.exceptions import AppError
 from app.resources import strings
@@ -59,3 +59,22 @@ def get_data_from_jwt_token(
         raise AppError(strings.TOKEN_EXPIRED, status.HTTP_401_UNAUTHORIZED)
     except jwt.PyJWTError:
         raise AppError(strings.TOKEN_INVALID, status.HTTP_401_UNAUTHORIZED)
+
+
+def get_token_from_request(request: Request) -> str:
+    """
+    Extract JWT token from Authorization header.
+
+    Args:
+        request: The FastAPI request object.
+
+    Raises:
+        HTTPException: If Authorization header is missing or invalid.
+
+    Returns:
+        str: The JWT token.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise AppError(strings.TOKEN_INVALID, status.HTTP_401_UNAUTHORIZED)
+    return auth_header.split(" ")[1]

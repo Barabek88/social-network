@@ -65,6 +65,9 @@ class AppSettings(BaseSettings):
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASSWORD: str = "guest"
 
+    # Messages Service
+    MESSAGES_SERVICE_URL: str = "http://localhost:8001"
+
     WEB_PORT: int = 8000
 
 
